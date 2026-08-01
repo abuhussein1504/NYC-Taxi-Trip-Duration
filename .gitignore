@@ -1,6 +1,4 @@
-# =========================
 # Python
-# =========================
 __pycache__/
 *.py[cod]
 *$py.class
@@ -25,15 +23,12 @@ Thumbs.db
 # Logs
 *.log
 
-# =========================
-# ML Datasets
-# =========================
+# Datasets
 nyc-taxi-trip-duration/train/
 nyc-taxi-trip-duration/test/
 nyc-taxi-trip-duration/sample_submission/
 
-# If you want to ignore all CSV files instead, uncomment:
-# *.csv
+*.csv
 
 # Models (optional)
 *.pkl
@@ -48,8 +43,8 @@ outputs/
 results/
 checkpoints/
 
-# =========================
 # Secrets
-# =========================
 .env
 .env.*
+
+.doctor_code.py
