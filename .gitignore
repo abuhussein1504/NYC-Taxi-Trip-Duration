@@ -24,11 +24,7 @@ Thumbs.db
 *.log
 
 # Datasets
-nyc-taxi-trip-duration/train/
-nyc-taxi-trip-duration/test/
-nyc-taxi-trip-duration/sample_submission/
-
-*.csv
+split/
 
 # Models (optional)
 *.pkl
@@ -46,3 +42,8 @@ checkpoints/
 # Secrets
 .env
 .env.*
+
+# Hiddens Codes 
+test.py
+predict_model.py
+NYC_Taxi_Trip_Duration_Modeling_Pipeline.ipynb

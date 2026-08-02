@@ -1,18 +1,21 @@
 # NYC Taxi Trip Duration - Exploratory Data Analysis
-
 import numpy as np
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+import warnings
 
 try:
     import cartopy.crs as ccrs
     import cartopy.feature as cfeature
+    from cartopy.io import DownloadWarning
     HAS_CARTOPY = True
+    warnings.filterwarnings('ignore', category=DownloadWarning, module='cartopy.io')
 except ImportError:
     HAS_CARTOPY = False
     print("cartopy not installed.")
+
 
 DATA_PATH = "/mnt/DATA/Courses/DR_Mostafa_Saad/My Tasks/ML Tasks/Project 1/nyc-taxi-trip-duration/train/train.csv"
 
@@ -30,9 +33,32 @@ BOROUGHS = {
 }
 
 MAP_EXTENT = [-74.3, -73.4, 40.5, 41.1]
+NYC_BBOX = {"lon": (-74.3, -73.4), "lat": (40.5, 41.1)}
 
 
 # Data loading / feature engineering
+def load_raw(path):
+    return pd.read_csv(path, parse_dates=["pickup_datetime"])
+
+
+def data_quality_report(df):
+    df.info()
+    print("\nMissing values:")
+    print(df.isnull().sum())
+    print("\nDuplicate rows:", df.duplicated().sum(), "\n")
+
+
+def filter_geo_outliers(df, bbox=NYC_BBOX):
+    outside = df[
+        ~df["pickup_longitude"].between(*bbox["lon"]) |
+        ~df["pickup_latitude"].between(*bbox["lat"]) |
+        ~df["dropoff_longitude"].between(*bbox["lon"]) |
+        ~df["dropoff_latitude"].between(*bbox["lat"])
+    ]
+    print(f"{len(outside)} rows ({len(outside) / len(df) * 100:.3f}%) "
+          f"have coordinates outside the NYC area\n")
+    return df.drop(outside.index)
+
 
 def haversine_miles(lat1, lon1, lat2, lon2):
     """Great-circle distance in miles between two lat/lon points."""
@@ -44,8 +70,8 @@ def haversine_miles(lat1, lon1, lat2, lon2):
     return 2 * R * np.arcsin(np.sqrt(a))
 
 
-def load_and_engineer(path):
-    df = pd.read_csv(path, parse_dates=["pickup_datetime"])
+def engineer_features(df):
+    df = df.copy()
 
     df["pickup_hour"] = df["pickup_datetime"].dt.hour
     df["pickup_dayofweek"] = df["pickup_datetime"].dt.dayofweek
@@ -63,12 +89,35 @@ def load_and_engineer(path):
 def prepare_viz_df(df, max_duration=3600):
     viz_df = df[df["trip_duration"] < max_duration].copy()
     viz_df["log_duration"] = np.log1p(viz_df["trip_duration"])
-    # guard against 0-duration rows before dividing
     viz_df["speed_mph"] = viz_df["distance"] / (viz_df["trip_duration"] / 3600).replace(0, np.nan)
     return viz_df
 
 
+def duration_and_speed_diagnostics(df, viz_df):
+    print(f"Trips >= 1hr: {(df['trip_duration'] >= 3600).sum()} "
+          f"({(df['trip_duration'] >= 3600).mean() * 100:.2f}%)\n")
+
+    implausible = viz_df[(viz_df["speed_mph"] > 80) | (viz_df["speed_mph"] == 0)]
+    print(f"{len(implausible)} trips with implausible speed (0 or >80mph)")
+
+
 # Plots
+def plot_categorical_breakdowns(df):
+    fig, axes = plt.subplots(1, 3, figsize=(15, 4))
+    df["vendor_id"].value_counts().plot(kind="bar", ax=axes[0], title="Vendor ID")
+    df["passenger_count"].value_counts().sort_index().plot(kind="bar", ax=axes[1], title="Passenger Count")
+    df["store_and_fwd_flag"].value_counts().plot(kind="bar", ax=axes[2], title="Store and Fwd Flag")
+    plt.tight_layout()
+    plt.show()
+
+
+def plot_correlation_matrix(df):
+    num_cols = ["trip_duration", "distance", "passenger_count", "pickup_hour", "pickup_dayofweek"]
+    plt.figure(figsize=(8, 6))
+    sns.heatmap(df[num_cols].corr(), annot=True, cmap="coolwarm", center=0)
+    plt.title("Correlation Matrix")
+    plt.show()
+
 
 def plot_pickup_dropoff_map(viz_df):
     if not HAS_CARTOPY:
@@ -134,27 +183,27 @@ def plot_duration_histogram(viz_df):
     plt.show()
 
 
-def plot_time_heatmaps(viz_df):
+def plot_time_heatmaps(viz_df, i):
     metrics = [
         ("trip_duration", "Average Trip Duration by Day and Hour", "Avg Duration (sec)"),
         ("distance", "Average Trip Distance by Day and Hour", "Avg Distance (miles)"),
         ("speed_mph", "Average Trip Speed by Day and Hour", "Avg Speed (mph)"),
     ]
 
-    fig, axes = plt.subplots(len(metrics), 1, figsize=(12, 6 * len(metrics)), constrained_layout=True)
+    value_col, title, cbar_label = metrics[i]
 
-    for ax, (value_col, title, cbar_label) in zip(axes, metrics):
-        pivot = viz_df.pivot_table(
-            index="day_name", columns="pickup_hour", values=value_col,
-            aggfunc="mean", observed=True,
-        )
-        sns.heatmap(pivot, cmap="YlGnBu", annot=False, ax=ax, cbar_kws={"label": cbar_label})
-        ax.set_title(title)
-        ax.set_xlabel("Hour of Day (0 = midnight)")
-        ax.set_ylabel("Day of Week")
-        plt.setp(ax.get_yticklabels(), rotation=45, ha="right", rotation_mode="anchor")
+    fig, ax = plt.subplots(figsize=(12, 6), constrained_layout=True)
 
-    plt.suptitle("Trip Duration, Distance, and Speed by Time and Day", fontsize=18)
+    pivot = viz_df.pivot_table(
+        index="day_name", columns="pickup_hour", values=value_col,
+        aggfunc="mean", observed=True,
+    )
+    sns.heatmap(pivot, cmap="YlGnBu", annot=False, ax=ax, cbar_kws={"label": cbar_label})
+    ax.set_title(title)
+    ax.set_xlabel("Hour of Day (0 = midnight)")
+    ax.set_ylabel("Day of Week")
+    plt.setp(ax.get_yticklabels(), rotation=45, ha="right", rotation_mode="anchor")
+
     plt.show()
 
 
@@ -170,25 +219,25 @@ def plot_distance_vs_duration(viz_df):
     plt.show()
 
 
-def plot_distance_by_vendor(viz_df):
-    plt.figure(figsize=(8, 6))
-    sns.boxplot(x="vendor_id", y="distance", data=viz_df)
-    plt.title("Distance by Vendor ID (Boxplot)")
-    plt.ylabel("Distance (miles)")
-    plt.xlabel("Vendor ID")
-    plt.grid(True)
-    plt.show()
-
-
 def main():
-    train = load_and_engineer(DATA_PATH)
+    train_raw = load_raw(DATA_PATH)
+
+    data_quality_report(train_raw)
+    train_clean = filter_geo_outliers(train_raw)
+
+    train = engineer_features(train_clean)
     viz_df = prepare_viz_df(train)
 
+    duration_and_speed_diagnostics(train, viz_df)
+
+    plot_categorical_breakdowns(train)
+    plot_correlation_matrix(train)
     plot_pickup_dropoff_map(viz_df)
     plot_duration_histogram(viz_df)
-    plot_time_heatmaps(viz_df)
+    plot_time_heatmaps(viz_df, 0)
+    plot_time_heatmaps(viz_df, 1)
+    plot_time_heatmaps(viz_df, 2)
     plot_distance_vs_duration(viz_df)
-    plot_distance_by_vendor(viz_df)
 
 
 if __name__ == "__main__":
