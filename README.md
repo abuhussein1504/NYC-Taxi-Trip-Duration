@@ -81,9 +81,9 @@ Loads the saved model and applies the exact same feature engineering used at tra
 
 | Split | R² (log1p trip_duration) |
 |---|---|
-| Train | _fill in latest_ |
-| Validation | _fill in latest_ |
-| Test (official, one-time) | _pending final run_ |
+| Train | 0.7569 |
+| Validation | 0.7558 |
+| Test | 0.7984 |
 
 ## Methodology
 
