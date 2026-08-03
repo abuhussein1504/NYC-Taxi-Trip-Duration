@@ -30,7 +30,7 @@ def score_csv(data_path):
     if has_labels:
         y_true = np.log1p(prepared["trip_duration"])
         r2 = r2_score(y_true, log_preds)
-        print(f"R² score (log1p trip_duration space): {r2:.4f}") # 0.6199
+        print(f"R² score (log1p trip_duration space): {r2:.4f}") # 0.7984
     else:
         print("No trip_duration column found - predictions only, no R² to report.")
 

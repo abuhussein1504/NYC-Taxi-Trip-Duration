@@ -56,6 +56,7 @@ def engineer_features(df):
         haversine(df["pickup_latitude"], df["pickup_longitude"], df["dropoff_latitude"], df["pickup_longitude"]) +
         haversine(df["dropoff_latitude"], df["pickup_longitude"], df["dropoff_latitude"], df["dropoff_longitude"])
     ))
+    df["speed_kph"] = df["distance"] / (df["trip_duration"] / 3600).replace(0, np.nan)
     df = add_airport_distances(df)
     df["delta_lat"] = df["dropoff_latitude"] - df["pickup_latitude"]
     df["delta_lon"] = df["dropoff_longitude"] - df["pickup_longitude"]

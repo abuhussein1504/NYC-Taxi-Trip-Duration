@@ -54,12 +54,11 @@ def main():
     train_r2 = r2_score(y_train, pipeline.predict(X_train))
     val_r2 = r2_score(y_val, pipeline.predict(X_val))
 
-    print(f"Ridge Train R²:      {train_r2:.4f}") # 0.6153
-    print(f"Ridge Validation R²: {val_r2:.4f}")   # 0.6118
+    print(f"Ridge Train R²:      {train_r2:.4f}") # 0.7569
+    print(f"Ridge Validation R²: {val_r2:.4f}")   # 0.7558
     
     joblib.dump(pipeline, MODEL_OUTPUT_PATH)
     joblib.dump(train_medians, MEDIANS_OUTPUT_PATH)
-
 
 if __name__ == "__main__":
     main()
