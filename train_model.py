@@ -14,8 +14,8 @@ from taxi_features import (
     split_features_and_target,
 )
 
-TRAIN_PATH = r"/mnt/DATA/Courses/DR_Mostafa_Saad/My Tasks/ML Tasks/Project 1/split/train.csv"
-VAL_PATH = r"/mnt/DATA/Courses/DR_Mostafa_Saad/My Tasks/ML Tasks/Project 1/split/val.csv"
+TRAIN_PATH = r"./split/train.csv"
+VAL_PATH = r"./split/val.csv"
 
 MODEL_OUTPUT_PATH = "ridge_trip_duration_model.joblib"
 MEDIANS_OUTPUT_PATH = "train_medians.joblib"
@@ -54,14 +54,11 @@ def main():
     train_r2 = r2_score(y_train, pipeline.predict(X_train))
     val_r2 = r2_score(y_val, pipeline.predict(X_val))
 
-    print(f"Ridge(alpha={RIDGE_ALPHA}) Train R²:      {train_r2:.4f}")
-    print(f"Ridge(alpha={RIDGE_ALPHA}) Validation R²: {val_r2:.4f}")
-
-    # joblib.dump(pipeline, MODEL_OUTPUT_PATH)
-    # joblib.dump(train_medians, MEDIANS_OUTPUT_PATH)
-    # print(f"\nSaved fitted pipeline to {MODEL_OUTPUT_PATH}")
-    # print(f"Saved training medians to {MEDIANS_OUTPUT_PATH}")
-
+    print(f"Ridge Train R²:      {train_r2:.4f}") # 0.7569
+    print(f"Ridge Validation R²: {val_r2:.4f}")   # 0.7558
+    
+    joblib.dump(pipeline, MODEL_OUTPUT_PATH)
+    joblib.dump(train_medians, MEDIANS_OUTPUT_PATH)
 
 if __name__ == "__main__":
     main()

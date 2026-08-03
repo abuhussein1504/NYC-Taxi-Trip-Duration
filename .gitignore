@@ -1,49 +1,11 @@
 # Python
 __pycache__/
-*.py[cod]
-*$py.class
-
-# Virtual environments
-.venv/
-venv/
-env/
-ENV/
-
-# Jupyter
-.ipynb_checkpoints/
-
-# IDEs
-.vscode/
-.idea/
-
-# OS files
-.DS_Store
-Thumbs.db
-
-# Logs
-*.log
 
 # Datasets
 split/
 
-# Models (optional)
-*.pkl
+# Models
 *.joblib
-*.h5
-*.pt
-*.pth
-*.onnx
 
 # Outputs
-outputs/
-results/
-checkpoints/
-
-# Secrets
-.env
-.env.*
-
-# Hiddens Codes 
-test.py
-predict_model.py
-NYC_Taxi_Trip_Duration_Modeling_Pipeline.ipynb
+predictions.csv
